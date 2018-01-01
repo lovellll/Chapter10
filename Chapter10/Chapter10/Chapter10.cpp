@@ -3,83 +3,93 @@
 
 #include "stdafx.h"
 #include <iostream>
-#include <vector>
-#include <string>
+#include <initializer_list>
+#include <cassert>
 
-class Teacher
+class IntArray
 {
-private:
-	std::string m_name;
+	int m_length;
+	int *m_array;
 
 public:
-	Teacher(std::string name)
-		: m_name(name)
+	IntArray() :m_length(0),m_array(nullptr)
 	{
 	}
 
-	std::string getName() { return m_name; }
-};
-
-class Department
-{
-private:
-	std::vector<Teacher*> m_teacher;
-
-
-public:
-	Department(Teacher *teacher = nullptr)
+	IntArray(int length) :m_length(length)
 	{
-		if(teacher!=nullptr)
-			m_teacher.push_back(teacher);
+		m_array = new int[length] {0};
 	}
 
-	Department& add(Teacher* teacher)
+	IntArray(const std::initializer_list<int> &list):IntArray(list.size())
 	{
-		m_teacher.push_back(teacher);
+		int count = 0;
+		for (const auto &element : list)
+		{
+			m_array[count] = element;
+			++count;
+		}
+	}
+
+	IntArray& operator=(const std::initializer_list<int> &list)
+	{
+		if (m_array != 0)
+		{
+			delete[] m_array;
+		}
+		m_length = list.size();
+		m_array = new int[m_length];
+		int count = 0;
+		for (const auto &element : list)
+		{
+			m_array[count] = element;
+			++count;
+		}
 		return *this;
 	}
 
-	friend std::ostream& operator<<(std::ostream &out, Department& dept);
-	
+	int& operator[](const int index)
+	{
+		assert(index >= 0 && index < m_length);
+		return m_array[index];
+	}
+
+
+	~IntArray()
+	{
+		delete[] m_array;
+	}
+
+	void erase()
+	{
+		if (m_length == 0)
+			return;  //no need to erase
+		delete[] m_array;
+		m_array = nullptr;
+		m_length = 0;
+	}
+
+	int getLength()
+	{
+		return m_length;
+	}
+
+
 };
 
-std::ostream& operator<<(std::ostream &out, Department& dept)
-{
-	std::cout << "Department: ";
-	for (const auto &ref : dept.m_teacher)
-	{
-		out << ref->getName() << " ";
-	}
-	std::cout << "\n";
-	return out;
-}
 
 int main()
 {
-	// Create a teacher outside the scope of the Department
-	Teacher *t1 = new Teacher("Bob"); // create a teacher
-	Teacher *t2 = new Teacher("Frank");
-	Teacher *t3 = new Teacher("Beth");
+	IntArray array { 5, 4, 3, 2, 1 }; // initializer list
+	for (int count = 0; count < array.getLength(); ++count)
+		std::cout << array[count] << ' ';
 
-	{
-		// Create a department and use the constructor parameter to pass
-		// the teacher to it.
-		Department dept; // create an empty Department
-		dept.add(t1);
-		dept.add(t2);
-		dept.add(t3);
+	std::cout << '\n';
 
-		std::cout << dept;
+	array = { 1, 3, 5, 7, 9, 11 };
 
-	} // dept goes out of scope here and is destroyed
-
-	std::cout << t1->getName() << " still exists!\n";
-	std::cout << t2->getName() << " still exists!\n";
-	std::cout << t3->getName() << " still exists!\n";
-
-	delete t1;
-	delete t2;
-	delete t3;
+	for (int count = 0; count < array.getLength(); ++count)
+		std::cout << array[count] << ' ';
 
 	return 0;
 }
